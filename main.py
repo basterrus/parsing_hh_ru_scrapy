@@ -1,5 +1,4 @@
 import json
-
 import requests
 from bs4 import BeautifulSoup
 import lxml
@@ -47,7 +46,7 @@ def main():
                 sal_info = vacancy.find('span', {'data-qa': 'vacancy-serp__vacancy-compensation'}).text.split(' ')
                 sal_cur = sal_info[-1]
                 if sal_info[0] == 'от':
-                    sal_min = sal_info[1].replace(u'\u202f', '')
+                    sal_min = int(sal_info[1].replace(u'\u202f', ''))
                     sal_max = None
                 elif sal_info[0] == 'до':
                     sal_min = None
