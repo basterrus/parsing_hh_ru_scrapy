@@ -3,7 +3,6 @@ from pymongo import MongoClient
 import requests
 from bs4 import BeautifulSoup
 import lxml
-import time
 
 headers = {
     'User-Agent': 'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko)'
@@ -17,17 +16,14 @@ area_dict = {
     'санкт петербург': 2,
 }
 
+vacancy_list = {}
+
 
 def main():
-    client = MongoClient('127.0.0.1', 27017)
-    db = client['hh']
-    vacancy = db.vacancy
-
     vacancy_name = input('Введите название вакансии: ').lower()
     vacancy_area = input('Введите регион поиска: ').lower()
     if vacancy_area in area_dict:
         vacancy_area = area_dict[vacancy_area]
-
     else:
         print('Введите правильное значение!')
 
@@ -42,9 +38,8 @@ def main():
         soup = BeautifulSoup(src, 'lxml')
         all_vacancy_info = soup.find_all('div', {'class': 'vacancy-serp-item'})
 
-        # vacancy_list = []
-        vacancy_list = {}
         for vacancy in all_vacancy_info:
+
             vacancy_card = vacancy.find('a')
             vacancy_name = vacancy_card.text
             vacancy_href = vacancy_card.get('href')
@@ -67,14 +62,6 @@ def main():
                 sal_max = None
                 sal_cur = None
 
-            # vacancy_list.append({
-            #     'Название вакансии': vacancy_name,
-            #     'Ссылка на вакансию': vacancy_href,
-            #     'Минимальная зарплата': sal_min,
-            #     'Максимальная зарплата': sal_max,
-            #     'Валюта': sal_cur,
-            # })
-
             vacancy_list['vacancy_name'] = vacancy_name
             vacancy_list['vacancy_href'] = vacancy_href
             vacancy_list['sal_min'] = sal_min
@@ -84,8 +71,8 @@ def main():
             with open('vacancy_data.json', "a", encoding="utf-8") as file:
                 json.dump(vacancy_list, file, indent=4, ensure_ascii=False)
 
-        print(f'Сохранены данные страницы {page}')
-        page += 1
+                print(f'Сохранены данные страницы {page}')
+                page += 1
 
         if not soup.find(text='дальше'):
             try:
@@ -93,11 +80,17 @@ def main():
             except AttributeError:
                 print('Больше нет страниц для перебора!')
 
-    vacancy.update_many(vacancy_list)
 
-# ХОТЬ ТРЕСНИ НЕ ПОНИМАЮ ПОЧЕМУ ОШИБКА НОН ТАЙП
-# Вне кода все отлично работает, добавляет, удаляет и ищет, а в коде не хочет
+def save_to_db():
+    client = MongoClient('127.0.0.1', 27017)
+    db = client['hh']
+    vacancy = db.vacancy
+
+    with open('vacancy_data.json', 'r', encoding='utf-8') as f:
+        file_data = json.load(f)
+        vacancy.insert_one(file_data)
 
 
 if __name__ == '__main__':
     main()
+    # save_to_db()
