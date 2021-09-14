@@ -10,3 +10,5 @@
 Урок 6. Scrapy. Парсинг фото и файлов       
 Урок 7. Selenium в Python       
 Урок 8. Работа с данными
+
+![Alt text](Screenshot_1.png)
